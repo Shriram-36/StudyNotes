@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyNest</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0d0d1a;
+  --surface:rgba(255,255,255,0.06);
+  --surface-hover:rgba(255,255,255,0.09);
+  --border:rgba(255,255,255,0.12);
+  --border-bright:rgba(255,255,255,0.22);
+  --purple:#7c6ff7;
+  --teal:#4fd1c5;
+  --amber:#f6a623;
+  --green:#48d597;
+  --red:#f87171;
+  --text:#f0f0ff;
+  --text-muted:rgba(240,240,255,0.55);
+  --text-dim:rgba(240,240,255,0.35);
+  --glass:rgba(255,255,255,0.08);
+  --glass-border:rgba(255,255,255,0.14);
+}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* Orbs */
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;opacity:0.18;}
+.orb1{width:500px;height:500px;background:var(--purple);top:-120px;left:-100px;}
+.orb2{width:400px;height:400px;background:var(--teal);bottom:-80px;right:-80px;}
+.orb3{width:300px;height:300px;background:var(--amber);top:50%;left:50%;transform:translate(-50%,-50%);}
+
+/* Layout */
+#app{position:relative;z-index:1;display:flex;height:100vh;overflow:hidden;}
+
+/* Sidebar */
+#sidebar{width:260px;min-width:260px;background:rgba(13,13,26,0.85);backdrop-filter:blur(20px);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width 0.3s;}
+.sidebar-header{padding:20px 16px 12px;border-bottom:1px solid var(--border);}
+.logo{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--purple),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.5px;}
+.logo span{font-weight:300;}
+.sidebar-section-label{font-size:10px;font-weight:600;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;padding:14px 16px 6px;}
+
+/* Subject tabs */
+#subjects-list{flex:1;overflow-y:auto;padding:0 10px 10px;}
+#subjects-list::-webkit-scrollbar{width:4px;}
+#subjects-list::-webkit-scrollbar-track{background:transparent;}
+#subjects-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:4px;}
+.subject-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer;transition:all 0.2s;margin-bottom:2px;font-size:14px;font-weight:500;}
+.subject-item:hover{background:var(--surface-hover);}
+.subject-item.active{background:rgba(124,111,247,0.18);border:1px solid rgba(124,111,247,0.3);}
+.subject-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.subject-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.subject-count{font-size:11px;color:var(--text-dim);background:rgba(255,255,255,0.07);padding:1px 6px;border-radius:20px;}
+.subject-item .del-btn{opacity:0;background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px;transition:opacity 0.2s;}
+.subject-item:hover .del-btn{opacity:1;}
+
+.btn-add{display:flex;align-items:center;gap:8px;width:100%;padding:9px 10px;border-radius:10px;background:none;border:1px dashed var(--border);color:var(--text-muted);font-size:13px;cursor:pointer;transition:all 0.2s;font-family:inherit;}
+.btn-add:hover{border-color:var(--purple);color:var(--purple);background:rgba(124,111,247,0.07);}
+
+/* Progress */
+.progress-bar-wrap{padding:12px 16px;border-top:1px solid var(--border);}
+.progress-label{font-size:12px;color:var(--text-muted);margin-bottom:6px;display:flex;justify-content:space-between;}
+.progress-bar{height:5px;background:rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--teal));border-radius:10px;transition:width 0.4s ease;}
+
+/* Main */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* Topbar */
+#topbar{display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid var(--border);background:rgba(13,13,26,0.7);backdrop-filter:blur(16px);}
+#topbar h2{font-size:18px;font-weight:600;flex:1;}
+.topbar-badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;}
+.badge-purple{background:rgba(124,111,247,0.18);color:#a89ef8;border:1px solid rgba(124,111,247,0.25);}
+.badge-teal{background:rgba(79,209,197,0.15);color:#6ee7df;border:1px solid rgba(79,209,197,0.22);}
+
+/* Content area: 3-pane */
+#content{flex:1;display:flex;overflow:hidden;}
+
+/* Unit pane */
+#unit-pane{width:220px;min-width:220px;border-right:1px solid var(--border);display:flex;flex-direction:column;background:rgba(255,255,255,0.02);}
+.pane-header{padding:14px 14px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.pane-title{font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);}
+.icon-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.2s;}
+.icon-btn:hover{background:var(--surface-hover);color:var(--text);}
+.pane-list{flex:1;overflow-y:auto;padding:8px;}
+.pane-list::-webkit-scrollbar{width:3px;}
+.pane-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+
+.unit-item{padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.18s;margin-bottom:2px;display:flex;align-items:center;gap:8px;}
+.unit-item:hover{background:var(--surface-hover);}
+.unit-item.active{background:rgba(79,209,197,0.12);border:1px solid rgba(79,209,197,0.22);color:var(--teal);}
+.unit-number{font-size:10px;font-family:'Fira Code',monospace;color:var(--text-dim);min-width:20px;}
+.unit-name{flex:1;}
+.unit-done{font-size:9px;color:var(--green);}
+.unit-item .del-btn{opacity:0;background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:1px 3px;}
+.unit-item:hover .del-btn{opacity:1;}
+
+/* Topic pane */
+#topic-pane{width:240px;min-width:240px;border-right:1px solid var(--border);display:flex;flex-direction:column;background:rgba(255,255,255,0.01);}
+.topic-item{padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;transition:all 0.18s;margin-bottom:2px;display:flex;align-items:center;gap:8px;}
+.topic-item:hover{background:var(--surface-hover);}
+.topic-item.active{background:rgba(246,166,35,0.12);border:1px solid rgba(246,166,35,0.2);color:var(--amber);}
+.topic-check{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--border-bright);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;cursor:pointer;transition:all 0.2s;}
+.topic-check.done{background:var(--green);border-color:var(--green);color:#000;}
+.topic-name{flex:1;font-size:13px;}
+.topic-name.done{text-decoration:line-through;color:var(--text-dim);}
+.topic-item .del-btn{opacity:0;background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;}
+.topic-item:hover .del-btn{opacity:1;}
+
+/* Note editor pane */
+#note-pane{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#note-toolbar{display:flex;align-items:center;gap:6px;padding:10px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.fmt-btn{background:none;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;padding:4px 8px;border-radius:6px;font-size:12px;font-family:'Fira Code',monospace;transition:all 0.2s;}
+.fmt-btn:hover{border-color:var(--purple);color:var(--purple);}
+.note-divider{width:1px;height:20px;background:var(--border);margin:0 2px;}
+#note-editor{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#note-content{flex:1;overflow-y:auto;padding:20px 24px;}
+#note-content::-webkit-scrollbar{width:5px;}
+#note-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:5px;}
+
+/* Rich text area */
+#rich-editor{min-height:200px;outline:none;font-size:15px;line-height:1.75;color:var(--text);font-family:'Outfit',sans-serif;caret-color:var(--purple);}
+#rich-editor:empty::before{content:attr(data-placeholder);color:var(--text-dim);pointer-events:none;}
+#rich-editor h1{font-size:24px;font-weight:700;margin-bottom:12px;color:var(--text);}
+#rich-editor h2{font-size:18px;font-weight:600;margin-bottom:8px;color:var(--text);}
+#rich-editor h3{font-size:15px;font-weight:600;margin-bottom:6px;color:var(--teal);}
+#rich-editor b,#rich-editor strong{color:var(--amber);}
+#rich-editor em{color:var(--text-muted);font-style:italic;}
+#rich-editor code{font-family:'Fira Code',monospace;background:rgba(124,111,247,0.15);border:1px solid rgba(124,111,247,0.2);padding:1px 6px;border-radius:4px;font-size:13px;color:#b5adff;}
+#rich-editor ul,#rich-editor ol{padding-left:24px;margin:6px 0;}
+#rich-editor li{margin-bottom:3px;}
+#rich-editor blockquote{border-left:3px solid var(--purple);padding-left:14px;color:var(--text-muted);margin:8px 0;font-style:italic;}
+#rich-editor hr{border:none;border-top:1px solid var(--border);margin:16px 0;}
+
+/* Image attachments */
+.attach-section{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+.attach-label{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;}
+.attach-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;}
+.attach-img-wrap{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+.attach-img-wrap img{display:block;width:160px;height:110px;object-fit:cover;}
+.attach-img-wrap .img-del{position:absolute;top:5px;right:5px;background:rgba(0,0,0,0.7);border:none;color:var(--red);width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}
+.attach-img-wrap .img-caption{font-size:11px;color:var(--text-muted);padding:4px 8px;background:rgba(0,0,0,0.4);}
+.attach-upload{display:flex;align-items:center;gap:8px;padding:8px 14px;border:1px dashed var(--border);border-radius:9px;background:none;color:var(--text-muted);cursor:pointer;font-size:13px;font-family:inherit;transition:all 0.2s;}
+.attach-upload:hover{border-color:var(--teal);color:var(--teal);}
+#file-input{display:none;}
+
+/* Save indicator */
+#save-status{font-size:11px;color:var(--text-dim);margin-left:auto;}
+#save-status.saved{color:var(--green);}
+
+/* Empty states */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--text-dim);text-align:center;padding:20px;}
+.empty-icon{font-size:48px;opacity:0.4;}
+.empty-title{font-size:16px;font-weight:500;color:var(--text-muted);}
+.empty-sub{font-size:13px;max-width:220px;line-height:1.6;}
+
+/* Inline input */
+.inline-input-wrap{padding:8px;}
+.inline-input{width:100%;background:rgba(255,255,255,0.07);border:1px solid var(--border-bright);color:var(--text);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;outline:none;}
+.inline-input:focus{border-color:var(--purple);}
+.inline-input-actions{display:flex;gap:6px;margin-top:6px;}
+.btn-sm{padding:5px 12px;border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;border:none;transition:all 0.2s;}
+.btn-primary{background:linear-gradient(135deg,var(--purple),#5b52e0);color:#fff;}
+.btn-ghost{background:none;border:1px solid var(--border);color:var(--text-muted);}
+.btn-ghost:hover{border-color:var(--text-muted);}
+
+/* Subconcepts tag */
+.sub-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;}
+.sub-tag{font-size:12px;padding:3px 10px;border-radius:20px;background:rgba(124,111,247,0.12);border:1px solid rgba(124,111,247,0.22);color:#b5adff;cursor:default;display:flex;align-items:center;gap:5px;}
+.sub-tag .tag-del{background:none;border:none;color:rgba(124,111,247,0.6);cursor:pointer;font-size:11px;padding:0;}
+.sub-tag .tag-del:hover{color:var(--red);}
+.add-subconcept{font-size:12px;padding:3px 10px;border-radius:20px;background:none;border:1px dashed rgba(124,111,247,0.3);color:rgba(124,111,247,0.6);cursor:pointer;font-family:inherit;transition:all 0.2s;}
+.add-subconcept:hover{border-color:var(--purple);color:var(--purple);}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:#16162b;border:1px solid var(--border-bright);border-radius:16px;padding:24px;min-width:340px;max-width:480px;width:90%;}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:16px;}
+.modal input{width:100%;background:rgba(255,255,255,0.07);border:1px solid var(--border-bright);color:var(--text);border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;margin-bottom:8px;}
+.modal input:focus{border-color:var(--purple);}
+.modal-colors{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.color-dot{width:22px;height:22px;border-radius:50%;cursor:pointer;transition:transform 0.2s;border:2px solid transparent;}
+.color-dot.selected,.color-dot:hover{transform:scale(1.2);border-color:rgba(255,255,255,0.5);}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+.btn-modal{padding:8px 18px;border-radius:9px;font-size:13px;cursor:pointer;font-family:inherit;border:none;}
+.btn-cancel{background:rgba(255,255,255,0.07);color:var(--text-muted);}
+.btn-confirm{background:linear-gradient(135deg,var(--purple),#5b52e0);color:#fff;}
+
+/* Image lightbox */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:center;justify-content:center;cursor:pointer;}
+.lightbox.show{display:flex;}
+.lightbox img{max-width:90vw;max-height:85vh;border-radius:10px;object-fit:contain;}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;right:24px;background:#1e1e3a;border:1px solid var(--border-bright);color:var(--text);padding:10px 18px;border-radius:10px;font-size:13px;z-index:300;transform:translateY(60px);opacity:0;transition:all 0.3s;}
+#toast.show{transform:translateY(0);opacity:1;}
+
+/* Copyright Footer */
+#copyright-footer{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-height:34px;
+  padding:7px 16px;
+  border-top:1px solid var(--border);
+  background:rgba(13,13,26,0.72);
+  color:var(--text-dim);
+  font-size:11px;
+  text-align:center;
+  flex-shrink:0;
+}
+#copyright-footer .owner{color:var(--text-muted);font-weight:500;}
+#copyright-footer a{color:var(--teal);text-decoration:none;}
+#copyright-footer a:hover{text-decoration:underline;}
+
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div id="app">
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">Study<span>Nest</span></div>
+    </div>
+    <div class="sidebar-section-label">Subjects</div>
+    <div id="subjects-list"></div>
+    <div style="padding:0 10px 10px;">
+      <button class="btn-add" onclick="openAddSubject()">＋ Add Subject</button>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-label">
+        <span>Overall Progress</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <div id="topbar">
+      <h2 id="topbar-title">Select a Subject</h2>
+      <span id="topbar-badge" class="topbar-badge badge-purple" style="display:none;"></span>
+    </div>
+    <div id="content">
+      <!-- Unit pane -->
+      <div id="unit-pane">
+        <div class="pane-header">
+          <span class="pane-title">Units</span>
+          <button class="icon-btn" onclick="showAddUnit()" title="Add Unit">＋</button>
+        </div>
+        <div class="pane-list" id="unit-list">
+          <div class="empty-state"><div class="empty-icon">📚</div><div class="empty-sub">Select a subject first</div></div>
+        </div>
+      </div>
+      <!-- Topic pane -->
+      <div id="topic-pane">
+        <div class="pane-header">
+          <span class="pane-title">Topics</span>
+          <button class="icon-btn" onclick="showAddTopic()" title="Add Topic">＋</button>
+        </div>
+        <div class="pane-list" id="topic-list">
+          <div class="empty-state"><div class="empty-icon">🗂️</div><div class="empty-sub">Select a unit</div></div>
+        </div>
+      </div>
+      <!-- Note pane -->
+      <div id="note-pane">
+        <div id="note-toolbar">
+          <button class="fmt-btn" onclick="fmt('bold')" title="Bold"><b>B</b></button>
+          <button class="fmt-btn" onclick="fmt('italic')" title="Italic"><i>I</i></button>
+          <button class="fmt-btn" onclick="fmt('underline')" title="Underline"><u>U</u></button>
+          <div class="note-divider"></div>
+          <button class="fmt-btn" onclick="fmtBlock('h2')">H2</button>
+          <button class="fmt-btn" onclick="fmtBlock('h3')">H3</button>
+          <button class="fmt-btn" onclick="fmt('insertUnorderedList')">• List</button>
+          <button class="fmt-btn" onclick="fmt('insertOrderedList')">1. List</button>
+          <div class="note-divider"></div>
+          <button class="fmt-btn" onclick="insertCode()">{'  '}</button>
+          <button class="fmt-btn" onclick="fmtBlock('blockquote')">" "</button>
+          <div class="note-divider"></div>
+          <span id="save-status">—</span>
+        </div>
+        <div id="note-editor">
+          <div id="note-content">
+            <div class="empty-state" id="note-empty">
+              <div class="empty-icon">✏️</div>
+              <div class="empty-title">No topic selected</div>
+              <div class="empty-sub">Select a topic from the left to start writing notes</div>
+            </div>
+            <div id="note-real" style="display:none;">
+              <div id="rich-editor" contenteditable="true" data-placeholder="Start typing your notes here…" spellcheck="true"></div>
+              <div class="sub-tags" id="sub-tags-wrap"></div>
+              <div class="attach-section">
+                <div class="attach-label">📎 Attachments</div>
+                <div class="attach-grid" id="attach-grid"></div>
+                <button class="attach-upload" onclick="document.getElementById('file-input').click()">＋ Attach Image / PDF</button>
+                <input type="file" id="file-input" accept="image/*,application/pdf" multiple onchange="handleFileUpload(event)">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      <footer id="copyright-footer">
+        <span>© 2026 Shriram Eklare. All Rights Reserved.</span>
+        <span>·</span>
+        <a href="mailto:eklareshriram@gmail.com">eklareshriram@gmail.com</a>
+      </footer>
+  </div>
+</div>
+
+<!-- Add Subject Modal -->
+<div class="modal-overlay" id="modal-subject">
+  <div class="modal">
+    <h3>New Subject</h3>
+    <input type="text" id="subject-input" placeholder="e.g. Operating Systems" maxlength="40" onkeydown="if(event.key==='Enter')confirmAddSubject()">
+    <div class="modal-colors" id="color-picker"></div>
+    <div class="modal-actions">
+      <button class="btn-modal btn-cancel" onclick="closeModal('modal-subject')">Cancel</button>
+      <button class="btn-modal btn-confirm" onclick="confirmAddSubject()">Add Subject</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── DB ───────────────────────────────────────────────
+let db;
+const DB_NAME='StudyNest';
+const DB_VER=1;
+
+function initDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(DB_NAME,DB_VER);
+    req.onupgradeneeded=e=>{
+      const d=e.target.result;
+      if(!d.objectStoreNames.contains('subjects')) d.createObjectStore('subjects',{keyPath:'id'});
+      if(!d.objectStoreNames.contains('units')) d.createObjectStore('units',{keyPath:'id'});
+      if(!d.objectStoreNames.contains('topics')) d.createObjectStore('topics',{keyPath:'id'});
+      if(!d.objectStoreNames.contains('notes')) d.createObjectStore('notes',{keyPath:'id'});
+    };
+    req.onsuccess=e=>{db=e.target.result;res();};
+    req.onerror=e=>rej(e);
+  });
+}
+
+function dbGet(store,key){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const req=tx.objectStore(store).get(key);req.onsuccess=()=>res(req.result);req.onerror=rej;});}
+function dbGetAll(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const req=tx.objectStore(store).getAll();req.onsuccess=()=>res(req.result);req.onerror=rej;});}
+function dbPut(store,obj){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');const req=tx.objectStore(store).put(obj);req.onsuccess=()=>res();req.onerror=rej;});}
+function dbDel(store,key){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');const req=tx.objectStore(store).delete(key);req.onsuccess=()=>res();req.onerror=rej;});}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+
+// ─── State ────────────────────────────────────────────
+let subjects=[],units=[],topics=[];
+let selSubject=null,selUnit=null,selTopic=null;
+let currentNote=null;
+let saveTimer=null;
+const COLORS=['#7c6ff7','#4fd1c5','#f6a623','#f87171','#48d597','#f472b6','#60a5fa','#a78bfa'];
+let pickedColor=COLORS[0];
+
+// ─── Init ─────────────────────────────────────────────
+async function init(){
+  await initDB();
+  subjects=await dbGetAll('subjects');
+  renderSubjects();
+  buildColorPicker();
+  updateProgress();
+}
+init();
+
+// ─── Subjects ─────────────────────────────────────────
+function buildColorPicker(){
+  const cp=document.getElementById('color-picker');
+  cp.innerHTML='';
+  COLORS.forEach(c=>{
+    const d=document.createElement('div');
+    d.className='color-dot'+(c===pickedColor?' selected':'');
+    d.style.background=c;
+    d.onclick=()=>{pickedColor=c;document.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('selected'));d.classList.add('selected');};
+    cp.appendChild(d);
+  });
+}
+
+function openAddSubject(){document.getElementById('subject-input').value='';buildColorPicker();document.getElementById('modal-subject').classList.add('show');setTimeout(()=>document.getElementById('subject-input').focus(),50);}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+async function confirmAddSubject(){
+  const name=document.getElementById('subject-input').value.trim();
+  if(!name)return;
+  const s={id:uid(),name,color:pickedColor,createdAt:Date.now()};
+  await dbPut('subjects',s);
+  subjects.push(s);
+  renderSubjects();
+  closeModal('modal-subject');
+  selectSubject(s.id);
+  toast('Subject added!');
+}
+
+function renderSubjects(){
+  const el=document.getElementById('subjects-list');
+  if(!subjects.length){el.innerHTML='<div class="empty-state" style="padding:20px 0;"><div class="empty-sub">No subjects yet</div></div>';return;}
+  el.innerHTML=subjects.map(s=>`
+    <div class="subject-item${selSubject===s.id?' active':''}" onclick="selectSubject('${s.id}')">
+      <div class="subject-dot" style="background:${s.color}"></div>
+      <span class="subject-name">${esc(s.name)}</span>
+      <button class="del-btn" onclick="event.stopPropagation();deleteSubject('${s.id}')" title="Delete">✕</button>
+    </div>
+  `).join('');
+}
+
+async function selectSubject(id){
+  selSubject=id;selUnit=null;selTopic=null;
+  units=await dbGetAll('units');
+  units=units.filter(u=>u.subjectId===id);
+  topics=await dbGetAll('topics');
+  const s=subjects.find(x=>x.id===id);
+  document.getElementById('topbar-title').textContent=s?s.name:'Subject';
+  const badge=document.getElementById('topbar-badge');
+  badge.style.display='inline';
+  badge.textContent=`${units.length} unit${units.length!==1?'s':''}`;
+  renderSubjects();
+  renderUnits();
+  clearTopicPane();
+  clearNotePane();
+  updateProgress();
+}
+
+async function deleteSubject(id){
+  if(!confirm('Delete this subject and all its data?'))return;
+  await dbDel('subjects',id);
+  subjects=subjects.filter(s=>s.id!==id);
+  if(selSubject===id){selSubject=null;selUnit=null;selTopic=null;document.getElementById('topbar-title').textContent='Select a Subject';document.getElementById('topbar-badge').style.display='none';renderUnits();clearTopicPane();clearNotePane();}
+  renderSubjects();
+  updateProgress();
+}
+
+// ─── Units ────────────────────────────────────────────
+let addingUnit=false;
+function showAddUnit(){
+  if(!selSubject){toast('Select a subject first');return;}
+  addingUnit=true;renderUnits();
+}
+
+function renderUnits(){
+  const el=document.getElementById('unit-list');
+  if(!selSubject){el.innerHTML='<div class="empty-state"><div class="empty-sub">Select a subject first</div></div>';return;}
+  let html=units.map((u,i)=>{
+    const done=u.done?'✔':'';
+    return `<div class="unit-item${selUnit===u.id?' active':''}" onclick="selectUnit('${u.id}')">
+      <span class="unit-number">U${i+1}</span>
+      <span class="unit-name">${esc(u.name)}</span>
+      ${done?`<span class="unit-done">✔</span>`:''}
+      <button class="del-btn" onclick="event.stopPropagation();deleteUnit('${u.id}')" title="Delete">✕</button>
+    </div>`;
+  }).join('');
+  if(addingUnit){
+    html+=`<div class="inline-input-wrap">
+      <input class="inline-input" id="unit-input" placeholder="Unit name…" maxlength="60" onkeydown="if(event.key==='Enter')confirmAddUnit();if(event.key==='Escape'){addingUnit=false;renderUnits();}">
+      <div class="inline-input-actions">
+        <button class="btn-sm btn-primary" onclick="confirmAddUnit()">Add</button>
+        <button class="btn-sm btn-ghost" onclick="addingUnit=false;renderUnits()">Cancel</button>
+      </div>
+    </div>`;
+  }
+  if(!units.length&&!addingUnit) html='<div class="empty-state"><div class="empty-icon">📖</div><div class="empty-sub">No units yet. Click + to add.</div></div>';
+  el.innerHTML=html;
+  if(addingUnit) setTimeout(()=>{const i=document.getElementById('unit-input');if(i)i.focus();},30);
+}
+
+async function confirmAddUnit(){
+  const input=document.getElementById('unit-input');
+  if(!input)return;
+  const name=input.value.trim();
+  if(!name)return;
+  const u={id:uid(),subjectId:selSubject,name,done:false,createdAt:Date.now()};
+  await dbPut('units',u);
+  units.push(u);
+  addingUnit=false;
+  renderUnits();
+  selectUnit(u.id);
+  toast('Unit added!');
+}
+
+async function selectUnit(id){
+  selUnit=id;selTopic=null;
+  const allTopics=await dbGetAll('topics');
+  topics=allTopics.filter(t=>t.unitId===id);
+  renderUnits();
+  renderTopics();
+  clearNotePane();
+  updateProgress();
+}
+
+async function deleteUnit(id){
+  await dbDel('units',id);
+  units=units.filter(u=>u.id!==id);
+  if(selUnit===id){selUnit=null;selTopic=null;clearTopicPane();clearNotePane();}
+  renderUnits();
+  updateProgress();
+}
+
+// ─── Topics ───────────────────────────────────────────
+let addingTopic=false;
+function showAddTopic(){
+  if(!selUnit){toast('Select a unit first');return;}
+  addingTopic=true;renderTopics();
+}
+
+function renderTopics(){
+  const el=document.getElementById('topic-list');
+  if(!selUnit){el.innerHTML='<div class="empty-state"><div class="empty-sub">Select a unit</div></div>';return;}
+  let html=topics.map(t=>`
+    <div class="topic-item${selTopic===t.id?' active':''}" onclick="selectTopic('${t.id}')">
+      <div class="topic-check${t.done?' done':''}" onclick="event.stopPropagation();toggleTopicDone('${t.id}')">${t.done?'✔':''}</div>
+      <span class="topic-name${t.done?' done':''}">${esc(t.name)}</span>
+      <button class="del-btn" onclick="event.stopPropagation();deleteTopic('${t.id}')" title="Delete">✕</button>
+    </div>
+  `).join('');
+  if(addingTopic){
+    html+=`<div class="inline-input-wrap">
+      <input class="inline-input" id="topic-input" placeholder="Topic name…" maxlength="80" onkeydown="if(event.key==='Enter')confirmAddTopic();if(event.key==='Escape'){addingTopic=false;renderTopics();}">
+      <div class="inline-input-actions">
+        <button class="btn-sm btn-primary" onclick="confirmAddTopic()">Add</button>
+        <button class="btn-sm btn-ghost" onclick="addingTopic=false;renderTopics()">Cancel</button>
+      </div>
+    </div>`;
+  }
+  if(!topics.length&&!addingTopic) html='<div class="empty-state"><div class="empty-icon">🗒️</div><div class="empty-sub">No topics yet. Click + to add.</div></div>';
+  el.innerHTML=html;
+  if(addingTopic) setTimeout(()=>{const i=document.getElementById('topic-input');if(i)i.focus();},30);
+}
+
+async function confirmAddTopic(){
+  const input=document.getElementById('topic-input');
+  if(!input)return;
+  const name=input.value.trim();
+  if(!name)return;
+  const t={id:uid(),unitId:selUnit,subjectId:selSubject,name,done:false,createdAt:Date.now()};
+  await dbPut('topics',t);
+  topics.push(t);
+  addingTopic=false;
+  renderTopics();
+  selectTopic(t.id);
+  toast('Topic added!');
+}
+
+async function toggleTopicDone(id){
+  const t=topics.find(x=>x.id===id);
+  if(!t)return;
+  t.done=!t.done;
+  await dbPut('topics',t);
+  renderTopics();
+  updateProgress();
+  if(t.done)toast('✔ Marked as done!');
+}
+
+async function deleteTopic(id){
+  await dbDel('topics',id);
+  await dbDel('notes',id);
+  topics=topics.filter(t=>t.id!==id);
+  if(selTopic===id){selTopic=null;clearNotePane();}
+  renderTopics();
+  updateProgress();
+}
+
+async function selectTopic(id){
+  selTopic=id;
+  renderTopics();
+  await loadNote(id);
+}
+
+function clearTopicPane(){
+  const el=document.getElementById('topic-list');
+  el.innerHTML='<div class="empty-state"><div class="empty-icon">🗂️</div><div class="empty-sub">Select a unit</div></div>';
+  topics=[];
+}
+function clearNotePane(){
+  document.getElementById('note-empty').style.display='flex';
+  document.getElementById('note-real').style.display='none';
+  document.getElementById('save-status').textContent='—';
+  document.getElementById('save-status').className='';
+}
+
+// ─── Notes ────────────────────────────────────────────
+async function loadNote(topicId){
+  let note=await dbGet('notes',topicId);
+  if(!note) note={id:topicId,html:'',subconcepts:[],attachments:[]};
+  currentNote=note;
+  document.getElementById('note-empty').style.display='none';
+  document.getElementById('note-real').style.display='block';
+  const editor=document.getElementById('rich-editor');
+  editor.innerHTML=note.html||'';
+  renderSubconcepts();
+  renderAttachments();
+  document.getElementById('save-status').textContent='All saved';
+  document.getElementById('save-status').className='saved';
+  editor.oninput=()=>{
+    document.getElementById('save-status').textContent='Saving…';
+    document.getElementById('save-status').className='';
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(saveNote,800);
+  };
+}
+
+async function saveNote(){
+  if(!currentNote)return;
+  currentNote.html=document.getElementById('rich-editor').innerHTML;
+  await dbPut('notes',currentNote);
+  document.getElementById('save-status').textContent='✓ Saved';
+  document.getElementById('save-status').className='saved';
+}
+
+// ─── Subconcepts ──────────────────────────────────────
+function renderSubconcepts(){
+  const wrap=document.getElementById('sub-tags-wrap');
+  if(!currentNote)return;
+  const tags=(currentNote.subconcepts||[]).map((s,i)=>`
+    <span class="sub-tag">${esc(s)}<button class="tag-del" onclick="removeSubconcept(${i})">✕</button></span>
+  `).join('');
+  wrap.innerHTML=tags+`<button class="add-subconcept" onclick="promptSubconcept()">＋ sub-concept</button>`;
+}
+
+function promptSubconcept(){
+  const name=prompt('Add sub-concept tag:');
+  if(!name||!name.trim())return;
+  currentNote.subconcepts=currentNote.subconcepts||[];
+  currentNote.subconcepts.push(name.trim());
+  saveNote();
+  renderSubconcepts();
+}
+
+function removeSubconcept(i){
+  currentNote.subconcepts.splice(i,1);
+  saveNote();
+  renderSubconcepts();
+}
+
+// ─── Attachments ──────────────────────────────────────
+async function handleFileUpload(e){
+  if(!currentNote)return;
+  const files=[...e.target.files];
+  for(const f of files){
+    const dataURL=await readFile(f);
+    const att={id:uid(),name:f.name,type:f.type,data:dataURL};
+    currentNote.attachments=currentNote.attachments||[];
+    currentNote.attachments.push(att);
+  }
+  await saveNote();
+  renderAttachments();
+  e.target.value='';
+  toast(`${files.length} file(s) attached`);
+}
+
+function readFile(f){return new Promise(res=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.readAsDataURL(f);});}
+
+function renderAttachments(){
+  const grid=document.getElementById('attach-grid');
+  if(!currentNote||!currentNote.attachments||!currentNote.attachments.length){grid.innerHTML='';return;}
+  grid.innerHTML=currentNote.attachments.map((a,i)=>{
+    if(a.type.startsWith('image/')){
+      return `<div class="attach-img-wrap">
+        <img src="${a.data}" alt="${esc(a.name)}" onclick="openLightbox('${a.id}')" style="cursor:zoom-in;">
+        <div class="img-caption">${esc(a.name.length>18?a.name.slice(0,16)+'…':a.name)}</div>
+        <button class="img-del" onclick="deleteAttachment('${a.id}')">✕</button>
+      </div>`;
+    } else {
+      return `<div class="attach-img-wrap" style="width:160px;height:auto;padding:10px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="openPDF('${a.id}')">
+        <span style="font-size:28px;">📄</span>
+        <div>
+          <div style="font-size:12px;color:var(--text);">${esc(a.name.length>18?a.name.slice(0,16)+'…':a.name)}</div>
+          <div style="font-size:10px;color:var(--text-dim);">PDF – click to view</div>
+        </div>
+        <button class="img-del" style="position:static;margin-left:auto;" onclick="event.stopPropagation();deleteAttachment('${a.id}')">✕</button>
+      </div>`;
+    }
+  }).join('');
+}
+
+function openLightbox(id){
+  const a=currentNote.attachments.find(x=>x.id===id);
+  if(!a)return;
+  document.getElementById('lightbox-img').src=a.data;
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('show');}
+function openPDF(id){
+  const a=currentNote.attachments.find(x=>x.id===id);
+  if(!a)return;
+  const w=window.open();w.document.write(`<iframe src="${a.data}" style="width:100%;height:100vh;border:none;"></iframe>`);
+}
+async function deleteAttachment(id){
+  currentNote.attachments=currentNote.attachments.filter(a=>a.id!==id);
+  await saveNote();
+  renderAttachments();
+}
+
+// ─── Formatting ───────────────────────────────────────
+function fmt(cmd){document.getElementById('rich-editor').focus();document.execCommand(cmd,false,null);}
+function fmtBlock(tag){document.getElementById('rich-editor').focus();document.execCommand('formatBlock',false,tag);}
+function insertCode(){
+  document.getElementById('rich-editor').focus();
+  const sel=window.getSelection();
+  if(sel.rangeCount){
+    const range=sel.getRangeAt(0);
+    const code=document.createElement('code');
+    code.textContent=sel.toString()||'code';
+    range.deleteContents();
+    range.insertNode(code);
+  }
+}
+
+// ─── Progress ─────────────────────────────────────────
+async function updateProgress(){
+  const allTopics=await dbGetAll('topics');
+  const total=allTopics.length;
+  const done=allTopics.filter(t=>t.done).length;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('progress-pct').textContent=pct+'%';
+  document.getElementById('progress-fill').style.width=pct+'%';
+}
+
+// ─── Toast ────────────────────────────────────────────
+let toastTimer=null;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+// ─── Util ─────────────────────────────────────────────
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+</script>
+</body>
+</html>
