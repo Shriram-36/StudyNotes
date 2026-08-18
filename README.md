@@ -124,7 +124,7 @@ Key design principles:
 
 StudyNest is designed to make academic preparation more organized, efficient, and measurable by bringing syllabus management, notes, resources, and progress tracking into a single platform.
 
-## Display
+## 🪺 Display
 
 <img width="1919" height="988" alt="Screenshot 2026-08-18 233345" src="https://github.com/user-attachments/assets/4dc7aa8f-494e-4b54-a371-46e3ed59c3c8" />
 
